@@ -36,13 +36,14 @@
       button:active {
           transform: scale(0.99);
       }
-      button[disabled] {
+      button:disabled {
         color: gray !important;
+        cursor: not-allowed;
       }
       #time {
         font-family: sans-serif;
       }
-      #record, #stop {
+      #record, #stop, #download-button, #share {
         width: 15rem;
       }
       #record {
@@ -51,19 +52,21 @@
       #stop {
         color: blue;
       }
-      #playback-bar {
-        width: 30rem;
-      }
       #playback-bar, #download, #time {
         margin-top: 1rem;
       }
       #download {
-        color: green;
-        display: block;
-        width: 100%;
+        display: inline-block;
       }
-      #download-button, audio {
-        width: 100%;
+      #download-button {
+        color: green;
+      }
+      #share {
+        color: cyan;
+      }
+      audio {
+        display: block;
+        width: 30rem;
       }
       .hidden {
         display: none;
@@ -79,22 +82,32 @@
     <div id="playback-bar" class="hidden">
       <audio src="" controls id="audio-playback"></audio>
       <a href="" download="" id="download" tabindex="-1">
-        <button id="download-button">Download WAV</button>
-      </a>
-		</div>
+        <button id="download-button">Download WAV</button></a>
+      <button id="share">Share</button>
+    </div>
     <script>
       const recordButton = document.getElementById('record');
       const stopButton = document.getElementById('stop');
       const playbackBar = document.getElementById('playback-bar');
       const audioPlayback = document.getElementById('audio-playback');
       const downloadLink = document.getElementById('download');
+      const shareButton = document.getElementById('share');
       const timeBar = document.getElementById('time');
       const secondsText = document.getElementById('seconds');
 
+      function now() {
+        return new Date().toISOString();
+      }
+
       downloadLink.addEventListener('click', function () {
         downloadLink.href = audioPlayback.src;
-        downloadLink.download = new Date().toISOString() + ".wav";
+        downloadLink.download = now() + ".wav";
       });
+
+      shareButton.addEventListener('click', function() {
+        navigator.share({title: now(), url: audioPlayback.src});
+      });
+      shareButton.disabled = !navigator.share;
 
       let playbackStream = null;
       let stopEventListener = null;
