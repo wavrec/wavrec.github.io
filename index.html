@@ -62,7 +62,7 @@
         color: green;
       }
       #share {
-        color: cyan;
+        color: magenta;
       }
       audio {
         display: block;
@@ -95,19 +95,30 @@
       const timeBar = document.getElementById('time');
       const secondsText = document.getElementById('seconds');
 
-      function now() {
-        return new Date().toISOString();
+      function fileName() {
+        return new Date().toISOString() + ".wav";
       }
 
       downloadLink.addEventListener('click', function () {
         downloadLink.href = audioPlayback.src;
-        downloadLink.download = now() + ".wav";
+        downloadLink.download = fileName();
       });
 
       shareButton.addEventListener('click', function() {
-        navigator.share({title: now(), url: audioPlayback.src});
+        fetch(audioPlayback.src).then(function(result) {
+          const blob = result.blob();
+          navigator.share({
+            files: [
+              new File(
+                [blob],
+                fileName(),
+                {type: blob.type, lastModified: new Date().getTime()}
+              )
+            ]
+          });
+        });
       });
-      shareButton.disabled = !navigator.share;
+      shareButton.disabled = !window.fetch || !navigator.share;
 
       let playbackStream = null;
       let stopEventListener = null;
