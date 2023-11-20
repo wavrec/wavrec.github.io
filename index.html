@@ -105,8 +105,11 @@
       });
 
       shareButton.addEventListener('click', function() {
-        fetch(audioPlayback.src).then(function(result) {
-          result.blob().then(function(blob) {
+        fetch(audioPlayback.src)
+          .then(function(result) {
+            return result.blob();
+          })
+          .then(function(blob) {
             navigator.share({
               files: [
                 new File(
@@ -117,58 +120,57 @@
               ]
             });
           });
-        });
       });
       shareButton.disabled = !window.fetch || !navigator.share;
 
-      let playbackStream = null;
-      let stopEventListener = null;
-      let interval = null;
+      function initialize(stream) {
+        let stopEventListener = null;
+        let interval = null;
+
+        stopButton.classList.remove('hidden')
+        stopButton.disabled = true;
+
+        recordButton.classList.remove('hidden');
+        recordButton.addEventListener('click', function () {
+          playbackBar.classList.add('hidden');
+          recordButton.disabled = true;
+
+          let recorder = new MediaRecorder(stream);
+          recorder.ondataavailable = function (event) {
+            const url = URL.createObjectURL(event.data);
+            audioPlayback.src = url;
+          }
+
+          if (stopEventListener !== null) {
+            stopButton.removeEventListener('click', stopEventListener);
+          }
+          stopEventListener = function() {
+            recorder.stop();
+            playbackBar.classList.remove('hidden');
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+            window.clearInterval(interval);
+          }
+          stopButton.addEventListener('click', stopEventListener);
+
+          recorder.start();
+          stopButton.disabled = false;
+
+          timeBar.classList.remove('hidden');
+
+          const delta = 10;
+          let ms = 0;
+          secondsText.innerText = '0';
+          interval = window.setInterval(function () {
+            ms += delta;
+            secondsText.innerText = (ms / 1000).toFixed(2);
+          }, delta);
+        })
+      }
+
       navigator.mediaDevices
         .getUserMedia({audio: true})
-        .then(function(stream) {
-          playbackStream = stream;
-
-          stopButton.classList.remove('hidden')
-          stopButton.disabled = true;
-
-          recordButton.classList.remove('hidden');
-          recordButton.addEventListener('click', function () {
-            playbackBar.classList.add('hidden');
-            recordButton.disabled = true;
-
-            let recorder = new MediaRecorder(stream);
-            recorder.ondataavailable = function (event) {
-              const url = URL.createObjectURL(event.data);
-              audioPlayback.src = url;
-            }
-
-            if (stopEventListener !== null) {
-              stopButton.removeEventListener('click', stopEventListener);
-            }
-            stopEventListener = function() {
-              recorder.stop();
-              playbackBar.classList.remove('hidden');
-              recordButton.disabled = false;
-              stopButton.disabled = true;
-              window.clearInterval(interval);
-            }
-            stopButton.addEventListener('click', stopEventListener);
-
-            recorder.start();
-            stopButton.disabled = false;
-
-            timeBar.classList.remove('hidden');
-
-            const delta = 10;
-            let ms = 0;
-            secondsText.innerText = '0';
-            interval = window.setInterval(function () {
-              ms += delta;
-              secondsText.innerText = (ms / 1000).toFixed(2);
-            }, delta);
-          })
-        })
+        .then(initialize)
         .catch(function (error) {
           console.log(error);
           document.write('Please allow microphone access (reload the page).');
