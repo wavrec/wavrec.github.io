@@ -106,15 +106,16 @@
 
       shareButton.addEventListener('click', function() {
         fetch(audioPlayback.src).then(function(result) {
-          const blob = result.blob();
-          navigator.share({
-            files: [
-              new File(
-                [blob],
-                fileName(),
-                {type: blob.type, lastModified: new Date().getTime()}
-              )
-            ]
+          result.blob().then(function(blob) {
+            navigator.share({
+              files: [
+                new File(
+                  [blob],
+                  fileName(),
+                  {type: blob.type, lastModified: new Date().getTime()}
+                )
+              ]
+            });
           });
         });
       });
