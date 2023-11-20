@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Record a WAV file in your browser
+    </title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
+    <style type="text/css">
+      button {
+        display: inline-block;
+        border: none;
+        padding: 1rem 2rem;
+        margin: 0;
+        text-decoration: none;
+        background: #ccc;
+        color: #000;
+        font-family: sans-serif;
+        font-size: 1rem;
+        cursor: pointer;
+        text-align: center;
+        transition: background 250ms ease-in-out, 
+                    transform 150ms ease;
+        border-radius: 3px;
+        height: 3rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+      }
+      button:hover,
+      button:focus {
+          background: #ddd;
+      }
+      button:focus {
+          outline: 1px solid #fff;
+          outline-offset: -2px;
+      }
+      button:active {
+          transform: scale(0.99);
+      }
+      button[disabled] {
+        color: gray !important;
+      }
+      #time {
+        font-family: sans-serif;
+      }
+      #record, #stop {
+        width: 15rem;
+      }
+      #record {
+        color: red;
+      }
+      #stop {
+        color: blue;
+      }
+      #playback-bar {
+        width: 30rem;
+      }
+      #playback-bar, #download, #time {
+        margin-top: 1rem;
+      }
+      #download {
+        color: green;
+        display: block;
+        width: 100%;
+      }
+      #download-button, audio {
+        width: 100%;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="record" class="hidden">Record</button>
+    <button id="stop" class="hidden">
+      Stop
+      <span id="time" class="hidden">at <span id="seconds">0</span>s</span>
+    </button>
+    <div id="playback-bar" class="hidden">
+      <audio src="" controls id="audio-playback"></audio>
+      <a href="" download="" id="download" tabindex="-1">
+        <button id="download-button">Download WAV</button>
+      </a>
+		</div>
+    <script>
+      const recordButton = document.getElementById('record');
+      const stopButton = document.getElementById('stop');
+      const playbackBar = document.getElementById('playback-bar');
+      const audioPlayback = document.getElementById('audio-playback');
+      const downloadLink = document.getElementById('download');
+      const timeBar = document.getElementById('time');
+      const secondsText = document.getElementById('seconds');
+
+      downloadLink.addEventListener('click', function () {
+        downloadLink.href = audioPlayback.src;
+        downloadLink.download = new Date().toISOString() + ".wav";
+      });
+
+      let playbackStream = null;
+      let stopEventListener = null;
+      let interval = null;
+      navigator.mediaDevices
+        .getUserMedia({audio: true})
+        .then(function(stream) {
+          playbackStream = stream;
+
+          stopButton.classList.remove('hidden')
+          stopButton.disabled = true;
+
+          recordButton.classList.remove('hidden');
+          recordButton.addEventListener('click', function () {
+            playbackBar.classList.add('hidden');
+            recordButton.disabled = true;
+
+            let recorder = new MediaRecorder(stream);
+            recorder.ondataavailable = function (event) {
+              const url = URL.createObjectURL(event.data);
+              audioPlayback.src = url;
+            }
+
+            if (stopEventListener !== null) {
+              stopButton.removeEventListener('click', stopEventListener);
+            }
+            stopEventListener = function() {
+              recorder.stop();
+              playbackBar.classList.remove('hidden');
+              recordButton.disabled = false;
+              stopButton.disabled = true;
+              window.clearInterval(interval);
+            }
+            stopButton.addEventListener('click', stopEventListener);
+
+            recorder.start();
+            stopButton.disabled = false;
+
+            timeBar.classList.remove('hidden');
+
+            const delta = 10;
+            let ms = 0;
+            secondsText.innerText = '0';
+            interval = window.setInterval(function () {
+              ms += delta;
+              secondsText.innerText = (ms / 1000).toFixed(2);
+            }, delta);
+          })
+        })
+        .catch(function (error) {
+          console.log(error);
+          document.write('Please allow microphone access (reload the page).');
+        });
+    </script>
+  </body>
+</html>
