@@ -202,10 +202,11 @@
 
       navigator.mediaDevices
         .getUserMedia({audio: {
-          autoGainControl: {ideal: false},
-          echoCancellation: {ideal: false},
-          noiseSuppression: {ideal: false},
           sampleRate: {ideal: 48000},
+          noiseSuppression: {ideal: false},
+          autoGainControl: {ideal: false},
+          // Disabling echo cancellation on Pixel 4a leads to a lot of noise.
+          // echoCancellation: {ideal: false},
         }})
         .then(initialize)
         .catch(function (error) {
