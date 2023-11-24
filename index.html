@@ -65,7 +65,7 @@
       .main {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr auto;
+        grid-template-rows: 1fr 1fr 1fr auto;
         width: 100%;
         max-width: 1000px;
         grid-gap: 1vmin;
@@ -92,17 +92,23 @@
         <button id="download-button">Download WAV</button></a>
       <button id="share" class="hidden">Share</button>
       <div class="merged">
+        <button id="release" class="hidden">Release microphone</button>
+        <button id="restart" class="hidden">Restart</button>
+      </div>
+      <div class="merged">
         <audio src="" controls id="audio-playback" class="hidden"></audio>
       </div>
     </div>
     <script>
       const recordButton = document.getElementById('record');
       const stopButton = document.getElementById('stop');
+      const timeBar = document.getElementById('time');
+      const secondsText = document.getElementById('seconds');
       const audioPlayback = document.getElementById('audio-playback');
       const downloadLink = document.getElementById('download');
       const shareButton = document.getElementById('share');
-      const timeBar = document.getElementById('time');
-      const secondsText = document.getElementById('seconds');
+      const releaseButton = document.getElementById('release');
+      const restartButton = document.getElementById('restart');
 
       function fileName() {
         return new Date().toISOString() + ".wav";
@@ -139,11 +145,23 @@
         stopButton.classList.remove('hidden')
         stopButton.disabled = true;
 
+        restartButton.addEventListener('click', function () {
+          document.location.reload();
+        });
+
+        releaseButton.addEventListener('click', function () {
+          recordButton.disabled = true;
+          releaseButton.classList.add('hidden');
+          restartButton.classList.remove('hidden');
+          stream.getTracks().forEach(function(track) { track.stop(); })
+        });
+
         recordButton.classList.remove('hidden');
         recordButton.addEventListener('click', function () {
           downloadLink.classList.add('hidden');
           shareButton.classList.add('hidden');
           audioPlayback.classList.add('hidden');
+          releaseButton.classList.add('hidden');
           recordButton.disabled = true;
 
           let recorder = new MediaRecorder(stream);
@@ -160,6 +178,7 @@
             downloadLink.classList.remove('hidden');
             shareButton.classList.remove('hidden');
             audioPlayback.classList.remove('hidden');
+            releaseButton.classList.remove('hidden');
             recordButton.disabled = false;
             stopButton.disabled = true;
             window.clearInterval(interval);
@@ -178,7 +197,7 @@
             ms += delta;
             secondsText.innerText = (ms / 1000).toFixed(2);
           }, delta);
-        })
+        });
       }
 
       navigator.mediaDevices
