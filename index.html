@@ -182,7 +182,12 @@
       }
 
       navigator.mediaDevices
-        .getUserMedia({audio: true})
+        .getUserMedia({audio: {
+          autoGainControl: {ideal: false},
+          echoCancellation: {ideal: false},
+          noiseSuppression: {ideal: false},
+          sampleRate: {ideal: 48000},
+        }})
         .then(initialize)
         .catch(function (error) {
           console.log(error);
