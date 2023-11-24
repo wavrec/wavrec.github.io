@@ -6,11 +6,13 @@
     </title>
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
     <style type="text/css">
+      html {
+        font-size: 4vmin;
+      }
       button {
         display: inline-block;
         border: none;
         padding: 1rem 2rem;
-        margin: 0;
         text-decoration: none;
         background: #ccc;
         color: #000;
@@ -21,7 +23,7 @@
         transition: background 250ms ease-in-out, 
                     transform 150ms ease;
         border-radius: 3px;
-        height: 3rem;
+        min-height: 3rem;
         -webkit-appearance: none;
         -moz-appearance: none;
       }
@@ -43,52 +45,59 @@
       #time {
         font-family: sans-serif;
       }
-      #record, #stop, #download-button, #share {
-        width: 15rem;
-      }
       #record {
         color: red;
       }
       #stop {
         color: blue;
       }
-      #playback-bar, #download, #time {
-        margin-top: 1rem;
-      }
-      #download {
-        display: inline-block;
-      }
       #download-button {
         color: green;
+        width: 100%;
       }
       #share {
         color: magenta;
       }
-      audio {
-        display: block;
-        width: 30rem;
-      }
       .hidden {
         display: none;
+      }
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr auto 1fr;
+        width: 100%;
+        max-width: 1000px;
+        grid-gap: 1vmin;
+        margin: auto;
+        margin-top: 1vmin;
+      }
+      .merged {
+        grid-column-end: span 2;
+        display: grid;
+      }
+      audio {
+        width: 100%;
+        margin: auto;
       }
     </style>
   </head>
   <body>
-    <button id="record" class="hidden">Record</button>
-    <button id="stop" class="hidden">
-      Stop
-      <span id="time" class="hidden">at <span id="seconds">0</span>s</span>
-    </button>
-    <div id="playback-bar" class="hidden">
-      <audio src="" controls id="audio-playback"></audio>
-      <a href="" download="" id="download" tabindex="-1">
+    <div class="main">
+      <button id="record" class="hidden">Record</button>
+      <button id="stop" class="hidden">
+        Stop
+        <span id="time" class="hidden">at <span id="seconds">0</span>s</span>
+      </button>
+      <div class="merged">
+        <audio src="" controls id="audio-playback" class="hidden"></audio>
+      </div>
+      <a href="" download="" id="download" class="hidden" tabindex="-1">
         <button id="download-button">Download WAV</button></a>
-      <button id="share">Share</button>
+      <button id="share" class="hidden">Share</button>
     </div>
     <script>
       const recordButton = document.getElementById('record');
       const stopButton = document.getElementById('stop');
-      const playbackBar = document.getElementById('playback-bar');
       const audioPlayback = document.getElementById('audio-playback');
       const downloadLink = document.getElementById('download');
       const shareButton = document.getElementById('share');
@@ -132,7 +141,9 @@
 
         recordButton.classList.remove('hidden');
         recordButton.addEventListener('click', function () {
-          playbackBar.classList.add('hidden');
+          audioPlayback.classList.add('hidden');
+          downloadLink.classList.add('hidden');
+          shareButton.classList.add('hidden');
           recordButton.disabled = true;
 
           let recorder = new MediaRecorder(stream);
@@ -146,7 +157,9 @@
           }
           stopEventListener = function() {
             recorder.stop();
-            playbackBar.classList.remove('hidden');
+            audioPlayback.classList.remove('hidden');
+            downloadLink.classList.remove('hidden');
+            shareButton.classList.remove('hidden');
             recordButton.disabled = false;
             stopButton.disabled = true;
             window.clearInterval(interval);
