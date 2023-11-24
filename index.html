@@ -55,6 +55,7 @@
       #download-button {
         color: green;
         width: 100%;
+        height: 100%;
       }
       #share {
         color: magenta;
@@ -65,7 +66,7 @@
       .main {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr 1fr auto;
+        grid-template-rows: 1fr 1fr 1fr 1fr auto;
         width: 100%;
         max-width: 1000px;
         grid-gap: 1vmin;
@@ -83,6 +84,22 @@
   </head>
   <body>
     <div class="main">
+      <button id="toggle-echo">
+        <script>
+          const cancelEchoParam = 'cancel-echo';
+          let cancelEcho = window.location.hash.indexOf(cancelEchoParam) != -1;
+          document.write(cancelEcho ? 'Disable' : 'Enable');
+        </script>
+        echo cancellation
+      </button>
+      <button id="toggle-noise">
+        <script>
+          const cancelNoiseParam = 'cancel-noise';
+          let cancelNoise = window.location.hash.indexOf(cancelNoiseParam) != -1;
+          document.write(cancelNoise ? 'Disable' : 'Enable');
+        </script>
+        noise suppression
+      </button>
       <button id="record" class="hidden">Record</button>
       <button id="stop" class="hidden">
         Stop
@@ -100,6 +117,8 @@
       </div>
     </div>
     <script>
+      const toggleEchoButton = document.getElementById('toggle-echo');
+      const toggleNoiseButton = document.getElementById('toggle-noise');
       const recordButton = document.getElementById('record');
       const stopButton = document.getElementById('stop');
       const timeBar = document.getElementById('time');
@@ -109,6 +128,32 @@
       const shareButton = document.getElementById('share');
       const releaseButton = document.getElementById('release');
       const restartButton = document.getElementById('restart');
+
+      function applyParams() {
+        let params = '';
+        let separator = '';
+        if (cancelEcho) {
+          params += separator + cancelEchoParam;
+          separator = ';';
+        }
+        if (cancelNoise) {
+          params += separator + cancelNoiseParam;
+          separator = ';';
+        }
+        window.location.hash = params;
+        // For simplicity, we just reload the page to re-acquire the stream.
+        window.location.reload();
+      }
+
+      toggleEchoButton.addEventListener('click', function() {
+        cancelEcho = !cancelEcho;
+        applyParams();
+      });
+
+      toggleNoiseButton.addEventListener('click', function() {
+        cancelNoise = !cancelNoise;
+        applyParams();
+      });
 
       function fileName() {
         return new Date().toISOString() + ".wav";
@@ -202,11 +247,10 @@
 
       navigator.mediaDevices
         .getUserMedia({audio: {
-          sampleRate: {ideal: 48000},
-          noiseSuppression: {ideal: false},
           autoGainControl: {ideal: false},
-          // Disabling echo cancellation on Pixel 4a leads to a lot of noise.
-          // echoCancellation: {ideal: false},
+          echoCancellation: {ideal: cancelEcho},
+          noiseSuppression: {ideal: cancelNoise},
+          sampleRate: {ideal: 48000},
         }})
         .then(initialize)
         .catch(function (error) {
